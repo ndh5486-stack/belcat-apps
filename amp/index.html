@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1a0e08">
+<title>Belcat Amp — Tube Tone Control</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    color: #f5e6c8;
+    font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    background:
+      radial-gradient(ellipse 60% 40% at 50% 110%, rgba(255,140,40,0.25), transparent 70%),
+      radial-gradient(ellipse 30% 25% at 15% 90%, rgba(255,90,20,0.18), transparent 70%),
+      radial-gradient(ellipse 30% 25% at 85% 90%, rgba(255,90,20,0.18), transparent 70%),
+      radial-gradient(ellipse 80% 50% at 50% 0%, #2a1810 0%, #150a06 60%, #0a0503 100%);
+    padding: 10px;
+    padding-bottom: 40px;
+  }
+  .wrap { max-width: 520px; margin: 0 auto; }
+
+  h1 {
+    font-size: 16px; margin: 4px 0 2px; color: #ffb347;
+    text-shadow: 0 0 12px rgba(255,140,40,0.6);
+    letter-spacing: 1px;
+  }
+  .sub { font-size: 9px; color: #b08968; margin-bottom: 8px; letter-spacing: 2px; text-transform: uppercase; }
+
+  .status {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(0,0,0,0.45); padding: 6px 10px; border-radius: 8px; margin-bottom: 8px;
+    font-size: 11px; border: 1px solid #3a2415;
+    backdrop-filter: blur(4px);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #c33; display: inline-block; margin-right: 5px;
+         box-shadow: 0 0 6px #c33; }
+  .dot.on { background: #7fff00; box-shadow: 0 0 8px #7fff00; }
+  button {
+    background: linear-gradient(180deg, #ffb347, #d98a2a); color: #1a0e08;
+    border: 1px solid #8a5a1a; padding: 6px 14px;
+    border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+  }
+  button.secondary { background: #2a1810; color: #e0b880; border: 1px solid #5a3a20; box-shadow: none; }
+  button:active { transform: scale(0.97); }
+
+  .panel {
+    background: linear-gradient(180deg, #1f120b 0%, #150a06 100%);
+    border: 1px solid #3a2415;
+    border-radius: 10px; padding: 10px 12px; margin-bottom: 8px;
+    box-shadow: inset 0 2px 0 rgba(255,180,80,0.06), 0 4px 12px rgba(0,0,0,0.5);
+  }
+  .panel h2 {
+    font-size: 10px; margin: 0 0 8px; color: #ffb347;
+    text-transform: uppercase; letter-spacing: 2px;
+    border-bottom: 1px solid #3a2415; padding-bottom: 4px;
+  }
+
+  /* 세로 슬라이더 열 */
+  .slider-row {
+    display: flex; justify-content: center; align-items: flex-end;
+    gap: 14px; padding: 2px 0;
+  }
+  .v-ctl {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    flex: 0 0 auto; width: 56px;
+  }
+  .v-ctl .val {
+    font-size: 11px; font-weight: bold; color: #ffd28a;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 6px rgba(255,160,60,0.5);
+  }
+  .v-ctl .name {
+    font-size: 8px; color: #b08968; text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  input[type=range].v {
+    -webkit-appearance: none; appearance: none;
+    writing-mode: vertical-lr; direction: rtl;
+    width: 24px; height: 110px;
+    background: transparent; margin: 0;
+  }
+  input[type=range].v::-webkit-slider-runnable-track {
+    width: 5px; height: 100%;
+    background: linear-gradient(180deg, #3a2415 0%, #1a0e08 100%);
+    border-radius: 3px;
+    border: 1px solid #5a3a20;
+  }
+  input[type=range].v::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 24px; height: 11px; border-radius: 3px;
+    background: linear-gradient(180deg, #ffd28a, #b06a20);
+    border: 1px solid #6a3a10;
+    box-shadow: 0 0 6px rgba(255,160,60,0.6), inset 0 1px 0 rgba(255,255,255,0.4);
+    margin-left: -9.5px;
+  }
+  input[type=range].v::-moz-range-track {
+    width: 5px; height: 100%;
+    background: #1a0e08; border-radius: 3px;
+  }
+  input[type=range].v::-moz-range-thumb {
+    width: 24px; height: 11px; border-radius: 3px;
+    background: linear-gradient(180deg, #ffd28a, #b06a20);
+    border: 1px solid #6a3a10;
+    margin-left: -9.5px;
+  }
+
+  .fx-card {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid #3a2415; border-radius: 8px; padding: 8px 10px;
+    margin-bottom: 6px;
+  }
+  .fx-card.on { border-color: #ffb347; box-shadow: 0 0 10px rgba(255,160,60,0.25); }
+  .fx-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px; font-size: 11px; font-weight: bold; color: #ffd28a;
+    text-transform: uppercase; letter-spacing: 2px;
+  }
+  .switch {
+    width: 36px; height: 18px; background: #2a1810; border-radius: 9px;
+    position: relative; cursor: pointer; transition: 0.2s;
+    border: 1px solid #5a3a20;
+  }
+  .switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px; border-radius: 50%; background: #8a5a30; transition: 0.2s;
+  }
+  .switch.on { background: #ffb347; box-shadow: 0 0 8px rgba(255,160,60,0.5); }
+  .switch.on::after { left: 18px; background: #1a0e08; }
+
+  .presets { display: flex; gap: 5px; flex-wrap: wrap; }
+  .presets button { flex: 1; min-width: 60px; padding: 7px 4px; font-size: 10px; }
+
+  .log {
+    font-family: monospace; font-size: 10px; color: #8a6a4a;
+    background: rgba(0,0,0,0.5); padding: 6px; border-radius: 6px;
+    max-height: 80px; overflow-y: auto; white-space: pre-wrap;
+  }
+  details summary { cursor: pointer; font-size: 11px; color: #8a6a4a; margin-top: 6px; }
+  details input {
+    width: 100%; background: rgba(0,0,0,0.5); color: #ffd28a; border: 1px solid #5a3a20;
+    padding: 5px; margin: 3px 0; border-radius: 4px; font-size: 11px;
+  }
+
+  .tube-glow {
+    text-align: center; font-size: 22px; margin: 2px 0;
+    filter: drop-shadow(0 0 10px rgba(255,140,40,0.7));
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="tube-glow">🕯️🔥🕯️</div>
+  <h1>Belcat Amp</h1>
+  <div class="sub">Vacuum Tube Tone Editor · BLE</div>
+
+  <div class="status">
+    <div><span class="dot" id="dot"></span><span id="statusText">연결 안됨 (모의 모드)</span></div>
+    <button id="btnConnect">BLE 연결</button>
+  </div>
+
+  <section class="panel">
+    <h2>마스터 &amp; 이퀄라이저</h2>
+    <div class="slider-row">
+      <div class="v-ctl">
+        <div class="val" id="volVal">50</div>
+        <input type="range" class="v" id="vol" min="0" max="100" value="50">
+        <div class="name">Volume</div>
+      </div>
+      <div class="v-ctl">
+        <div class="val" id="bassVal">50</div>
+        <input type="range" class="v" id="bass" min="0" max="100" value="50">
+        <div class="name">Bass</div>
+      </div>
+      <div class="v-ctl">
+        <div class="val" id="midVal">50</div>
+        <input type="range" class="v" id="mid" min="0" max="100" value="50">
+        <div class="name">Mid</div>
+      </div>
+      <div class="v-ctl">
+        <div class="val" id="trebleVal">50</div>
+        <input type="range" class="v" id="treble" min="0" max="100" value="50">
+        <div class="name">Treble</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>이펙트</h2>
+
+    <div class="fx-card" id="fxChorus">
+      <div class="fx-head">Chorus <div class="switch" data-fx="chorus"></div></div>
+      <div class="slider-row">
+        <div class="v-ctl">
+          <div class="val" id="chorusDepthVal">40</div>
+          <input type="range" class="v" id="chorusDepth" min="0" max="100" value="40">
+          <div class="name">Depth</div>
+        </div>
+        <div class="v-ctl">
+          <div class="val" id="chorusRateVal">30</div>
+          <input type="range" class="v" id="chorusRate" min="0" max="100" value="30">
+          <div class="name">Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fx-card" id="fxReverb">
+      <div class="fx-head">Reverb <div class="switch" data-fx="reverb"></div></div>
+      <div class="slider-row">
+        <div class="v-ctl">
+          <div class="val" id="reverbDecayVal">50</div>
+          <input type="range" class="v" id="reverbDecay" min="0" max="100" value="50">
+          <div class="name">Decay</div>
+        </div>
+        <div class="v-ctl">
+          <div class="val" id="reverbMixVal">40</div>
+          <input type="range" class="v" id="reverbMix" min="0" max="100" value="40">
+          <div class="name">Mix</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fx-card" id="fxDelay">
+      <div class="fx-head">Delay <div class="switch" data-fx="delay"></div></div>
+      <div class="slider-row">
+        <div class="v-ctl">
+          <div class="val" id="delayTimeVal">30</div>
+          <input type="range" class="v" id="delayTime" min="0" max="100" value="30">
+          <div class="name">Time</div>
+        </div>
+        <div class="v-ctl">
+          <div class="val" id="delayFbVal">40</div>
+          <input type="range" class="v" id="delayFb" min="0" max="100" value="40">
+          <div class="name">Feedback</div>
+        </div>
+        <div class="v-ctl">
+          <div class="val" id="delayMixVal">30</div>
+          <input type="range" class="v" id="delayMix" min="0" max="100" value="30">
+          <div class="name">Mix</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>프리셋</h2>
+    <div class="presets">
+      <button data-preset="clean">Clean</button>
+      <button data-preset="crunch">Crunch</button>
+      <button data-preset="lead">Lead</button>
+      <button data-preset="ambient">Ambient</button>
+    </div>
+    <div style="margin-top:10px; display:flex; gap:6px;">
+      <button class="secondary" id="btnSave" style="flex:1;">현재 설정 저장</button>
+      <button class="secondary" id="btnLoad" style="flex:1;">저장 불러오기</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>BLE 설정</h2>
+    <details>
+      <summary>서비스/캐릭터리스틱 UUID · 프로토콜</summary>
+      <label style="font-size:12px; color:#8a6a4a;">Service UUID</label>
+      <input type="text" id="svcUuid" value="0000ffe0-0000-1000-8000-00805f9b34fb">
+      <label style="font-size:12px; color:#8a6a4a;">Write Characteristic UUID</label>
+      <input type="text" id="chrUuid" value="0000ffe1-0000-1000-8000-00805f9b34fb">
+      <div class="log" id="log">로그 없음</div>
+    </details>
+  </section>
+
+</div>
+
+<script>
+const state = {};
+const ids = ['vol','bass','mid','treble',
+             'chorusDepth','chorusRate',
+             'reverbDecay','reverbMix',
+             'delayTime','delayFb','delayMix'];
+ids.forEach(id => state[id] = +document.getElementById(id).value);
+state.chorus = state.reverb = state.delay = false;
+
+ids.forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    state[id] = +el.value;
+    document.getElementById(id + 'Val').textContent = el.value;
+    sendToAmp();
+  });
+});
+
+document.querySelectorAll('.switch').forEach(s => {
+  s.addEventListener('click', () => {
+    const fx = s.dataset.fx;
+    state[fx] = !state[fx];
+    s.classList.toggle('on', state[fx]);
+    document.getElementById('fx' + fx[0].toUpperCase() + fx.slice(1)).classList.toggle('on', state[fx]);
+    sendToAmp();
+  });
+});
+
+const presets = {
+  clean:   {vol:60, bass:55, mid:50, treble:60, chorus:false, reverbDecay:30, reverbMix:20, delay:false},
+  crunch:  {vol:70, bass:60, mid:65, treble:55, chorus:false, reverbDecay:20, reverbMix:15, delay:false},
+  lead:    {vol:75, bass:50, mid:60, treble:70, chorus:true,  chorusDepth:50, chorusRate:20, reverbDecay:60, reverbMix:50, delay:true, delayTime:20, delayFb:35, delayMix:30},
+  ambient: {vol:55, bass:45, mid:40, treble:55, chorus:true,  chorusDepth:70, chorusRate:15, reverbDecay:85, reverbMix:70, delay:true, delayTime:50, delayFb:55, delayMix:45},
+};
+document.querySelectorAll('[data-preset]').forEach(b => {
+  b.addEventListener('click', () => applyPreset(presets[b.dataset.preset]));
+});
+function applyPreset(p) {
+  Object.assign(state, p);
+  Object.keys(p).forEach(k => {
+    const el = document.getElementById(k);
+    if (el) { el.value = p[k]; document.getElementById(k+'Val').textContent = p[k]; }
+  });
+  document.querySelectorAll('.switch').forEach(s => {
+    const fx = s.dataset.fx;
+    s.classList.toggle('on', !!state[fx]);
+    document.getElementById('fx'+fx[0].toUpperCase()+fx.slice(1)).classList.toggle('on', !!state[fx]);
+  });
+  sendToAmp();
+}
+
+document.getElementById('btnSave').onclick = () => {
+  localStorage.setItem('ampPreset', JSON.stringify(state));
+  log('프리셋 저장됨');
+};
+document.getElementById('btnLoad').onclick = () => {
+  const s = localStorage.getItem('ampPreset');
+  if (s) applyPreset(JSON.parse(s));
+};
+
+let device = null, characteristic = null;
+const dot = document.getElementById('dot');
+const statusText = document.getElementById('statusText');
+
+document.getElementById('btnConnect').onclick = async () => {
+  if (!navigator.bluetooth) {
+    alert('이 브라우저는 Web Bluetooth를 지원하지 않습니다.\nAndroid Chrome으로 여세요.');
+    return;
+  }
+  try {
+    log('BLE 기기 검색 중...');
+    device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [document.getElementById('svcUuid').value] }],
+      optionalServices: [document.getElementById('svcUuid').value]
+    });
+    log('기기 선택: ' + device.name);
+    const server = await device.gatt.connect();
+    const svc = await server.getService(document.getElementById('svcUuid').value);
+    characteristic = await svc.getCharacteristic(document.getElementById('chrUuid').value);
+    dot.classList.add('on');
+    statusText.textContent = '연결됨: ' + (device.name || device.id);
+    log('BLE 연결 성공');
+    sendToAmp();
+  } catch (e) {
+    log('연결 오류: ' + e.message);
+  }
+};
+
+function sendToAmp() {
+  log(JSON.stringify(state));
+  if (!characteristic) return;
+  const msg = buildMessage();
+  const enc = new TextEncoder().encode(msg);
+  characteristic.writeValueWithoutResponse(enc).catch(e => log('전송 오류: '+e.message));
+}
+
+function buildMessage() {
+  return [
+    'VOL='+state.vol, 'BAS='+state.bass, 'MID='+state.mid, 'TRB='+state.treble,
+    'COR='+(state.chorus?1:0), 'COR_D='+state.chorusDepth, 'COR_R='+state.chorusRate,
+    'RVB='+(state.reverb?1:0), 'RVB_D='+state.reverbDecay, 'RVB_M='+state.reverbMix,
+    'DLY='+(state.delay?1:0), 'DLY_T='+state.delayTime, 'DLY_F='+state.delayFb, 'DLY_M='+state.delayMix,
+  ].join(',') + '\n';
+}
+
+function log(msg) {
+  const l = document.getElementById('log');
+  l.textContent = new Date().toLocaleTimeString() + '  ' + msg + '\n' + l.textContent;
+}
+</script>
+</body>
+</html>
