@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Belcat Tuner test 1</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { font-style: italic; font-weight: 900; }
+  body {
+    margin: 0; min-height: 100vh; color: #fff;
+    font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    background: #0a0a0a;
+    padding: 16px; padding-bottom: 40px;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* 흐려진 배경 사진 레이어 */
+  body::after {
+    content: ""; position: fixed; inset: -30px; z-index: -1;
+    background: url('bg.jpg') center / cover no-repeat;
+    filter: blur(25px) brightness(0.55);
+  }
+  /* 기울어진 Belcat 워터마크 */
+  body::before {
+    content: "BELCAT  BELCAT  BELCAT  BELCAT  BELCAT";
+    position: fixed; inset: 0; z-index: 0;
+    font-size: 80px; font-weight: 900; font-style: italic;
+    color: rgba(255,255,255,0.05);
+    white-space: nowrap;
+    transform: rotate(-20deg);
+    transform-origin: center;
+    pointer-events: none;
+    line-height: 2.5;
+    letter-spacing: 8px;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; }
+
+  h1 {
+    text-align: center; font-size: 22px; margin: 8px 0 4px;
+    background: linear-gradient(90deg, #ffd60a, #ff4757, #4d96ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    font-weight: 900; font-style: italic; letter-spacing: 1px;
+  }
+  .sub { text-align: center; font-size: 11px; color: #fff; margin-bottom: 18px; opacity: 0.9; font-style: italic; }
+
+  .inst-tabs {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 16px;
+  }
+  .inst-tabs button {
+    padding: 10px 4px; font-size: 12px; font-weight: 900; font-style: italic;
+    background: rgba(255,255,255,0.1); color: #fff;
+    border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer;
+  }
+  .inst-tabs button.on {
+    background: #fff; color: #111;
+    border-color: #fff;
+    box-shadow: 0 0 10px rgba(255,255,255,0.6);
+  }
+
+  .dial-box {
+    background: rgba(0,0,0,0.55); border-radius: 16px; padding: 20px;
+    border: 1px solid rgba(255,255,255,0.15);
+    margin-bottom: 16px;
+  }
+  .dial {
+    position: relative; width: 260px; height: 150px; margin: 0 auto;
+  }
+  .dial svg { width: 100%; height: 100%; overflow: visible; }
+  .needle {
+    transform-origin: 130px 140px;
+    transform: rotate(-45deg);
+    transition: transform 0.1s ease-out;
+  }
+
+  .note-display {
+    text-align: center; margin-top: 8px;
+  }
+  .note {
+    font-size: 72px; font-weight: 900; font-style: italic; line-height: 1;
+    color: #fff;
+    text-shadow: 0 0 20px rgba(255,255,255,0.4);
+  }
+  .note.in-tune { color: #4dff88; text-shadow: 0 0 20px rgba(77,255,136,0.7); }
+  .cents {
+    font-size: 14px; color: #fff; margin-top: 4px; font-variant-numeric: tabular-nums; font-style: italic;
+  }
+  .freq {
+    font-size: 13px; color: #fff; margin-top: 2px; font-style: italic; opacity: 0.85;
+  }
+
+  .strings {
+    display: grid; gap: 6px; margin-bottom: 16px;
+  }
+  .strings button {
+    padding: 10px; font-size: 13px; font-weight: 900; font-style: italic;
+    background: rgba(255,255,255,0.1); color: #fff;
+    border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer;
+    display: flex; justify-content: space-between;
+  }
+  .strings button.on {
+    background: #fff; color: #111;
+    border-color: #fff;
+  }
+  .strings button .hz { opacity: 0.8; font-size: 11px; }
+
+  .mic-btn {
+    width: 100%; padding: 16px; font-size: 15px; font-weight: 900; font-style: italic;
+    background: #fff; color: #111; border: 0; border-radius: 12px; cursor: pointer;
+  }
+  .mic-btn:disabled { opacity: 0.6; }
+  .status {
+    text-align: center; font-size: 11px; color: #fff; margin-top: 8px; min-height: 16px;
+    font-style: italic; opacity: 0.85;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Belcat Tuner test 1</h1>
+  <div class="sub"> chromatic instrument tuner </div>
+
+  <div class="inst-tabs">
+    <button data-inst="guitar" class="on">기타</button>
+    <button data-inst="ukulele">우쿨렐레</button>
+    <button data-inst="bass">베이스</button>
+    <button data-inst="violin">바이올린</button>
+  </div>
+
+  <div class="dial-box">
+    <div class="dial">
+      <svg viewBox="0 0 260 150">
+        <!-- 게이지 눈금 -->
+        <path d="M 20 140 A 110 110 0 0 1 240 140" stroke="#444" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <path d="M 20 140 A 110 110 0 0 1 130 30" stroke="#ff4757" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <path d="M 130 30 A 110 110 0 0 1 240 140" stroke="#4d96ff" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <!-- 중앙 표시 -->
+        <line x1="130" y1="25" x2="130" y2="40" stroke="#ffd60a" stroke-width="3"/>
+        <!-- 바늘 -->
+        <g class="needle" id="needle">
+          <line x1="130" y1="140" x2="130" y2="45" stroke="#fff" stroke-width="3"/>
+          <circle cx="130" cy="140" r="6" fill="#ffd60a"/>
+        </g>
+        <!-- 라벨 -->
+        <text x="25" y="148" fill="#fff" font-size="11" font-weight="900" font-style="italic">flat</text>
+        <text x="120" y="22" fill="#fff" font-size="11" font-weight="900" font-style="italic">0</text>
+        <text x="220" y="148" fill="#fff" font-size="11" font-weight="900" font-style="italic">sharp</text>
+      </svg>
+    </div>
+    <div class="note-display">
+      <div class="note" id="note">--</div>
+      <div class="cents" id="cents">Cents: --</div>
+      <div class="freq" id="freq">Frequency: --</div>
+    </div>
+  </div>
+
+  <div class="strings" id="strings"></div>
+
+  <button class="mic-btn" id="micBtn">🎤 마이크 켜고 튜닝 시작</button>
+  <div class="status" id="status">마이크 권한을 허용하면 소리를 분석합니다</div>
+
+</div>
+
+<script>
+// ---- 튜닝 프리셋 ----
+const tunings = {
+  guitar:  [
+    {note:'E2', hz:82.41}, {note:'A2', hz:110.00}, {note:'D3', hz:146.83},
+    {note:'G3', hz:196.00}, {note:'B3', hz:246.94}, {note:'E4', hz:329.63}
+  ],
+  ukulele: [
+    {note:'G4', hz:392.00}, {note:'C4', hz:261.63},
+    {note:'E4', hz:329.63}, {note:'A4', hz:440.00}
+  ],
+  bass: [
+    {note:'E1', hz:41.20}, {note:'A1', hz:55.00},
+    {note:'D2', hz:73.42}, {note:'G2', hz:98.00}
+  ],
+  violin: [
+    {note:'G3', hz:196.00}, {note:'D4', hz:293.66},
+    {note:'A4', hz:440.00}, {note:'E5', hz:659.25}
+  ]
+};
+let currentInst = 'guitar';
+let selectedString = null; // null = 자동 인식
+
+// ---- 현 목록 렌더링 ----
+function renderStrings() {
+  const box = document.getElementById('strings');
+  box.innerHTML = '';
+  tunings[currentInst].forEach((s, i) => {
+    const b = document.createElement('button');
+    b.innerHTML = `<span>${s.note}</span><span class="hz">${s.hz.toFixed(2)} Hz</span>`;
+    if (selectedString === i) b.classList.add('on');
+    b.onclick = () => {
+      selectedString = (selectedString === i) ? null : i;
+      renderStrings();
+    };
+    box.appendChild(b);
+  });
+}
+renderStrings();
+
+document.querySelectorAll('.inst-tabs button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.inst-tabs button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    currentInst = b.dataset.inst;
+    selectedString = null;
+    renderStrings();
+  };
+});
+
+// ---- 피치 검출 (autocorrelation) ----
+let audioCtx, analyser, stream, rafId;
+const buf = new Float32Array(2048);
+
+function autoCorrelate(buf, sr) {
+  let SIZE = buf.length, rms = 0;
+  for (let i=0;i<SIZE;i++) rms += buf[i]*buf[i];
+  rms = Math.sqrt(rms/SIZE);
+  if (rms < 0.01) return -1;
+
+  let r1=0, r2=SIZE-1, thres=0.2;
+  for (let i=0;i<SIZE/2;i++) if (Math.abs(buf[i]) < thres) { r1=i; break; }
+  for (let i=1;i<SIZE/2;i++) if (Math.abs(buf[SIZE-i]) < thres) { r2=SIZE-i; break; }
+
+  const b = buf.slice(r1, r2);
+  const N = b.length;
+  const c = new Array(N).fill(0);
+  for (let i=0;i<N;i++) for (let j=0;j<N-i;j++) c[i] += b[j]*b[j+i];
+
+  let d=0; while (d<N-1 && c[d]>c[d+1]) d++;
+  let maxval=-1, maxpos=-1;
+  for (let i=d;i<N;i++) if (c[i]>maxval) { maxval=c[i]; maxpos=i; }
+
+  let T0 = maxpos;
+  if (!T0) return -1;
+  return sr / T0;
+}
+
+// ---- 가장 가까운 음 계산 ----
+const NOTE_NAMES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+function freqToNearest(freq) {
+  const midi = Math.round(69 + 12*Math.log2(freq/440));
+  const name = NOTE_NAMES[midi % 12];
+  const octave = Math.floor(midi/12) - 1;
+  const target = 440 * Math.pow(2, (midi-69)/12);
+  const cents = 1200 * Math.log2(freq/target);
+  return { note: name + octave, midi, target, cents };
+}
+
+function update() {
+  analyser.getFloatTimeDomainData(buf);
+  const freq = autoCorrelate(buf, audioCtx.sampleRate);
+
+  const noteEl = document.getElementById('note');
+  const centsEl = document.getElementById('cents');
+  const freqEl = document.getElementById('freq');
+  const needle = document.getElementById('needle');
+
+  if (freq <= 0 || isNaN(freq)) {
+    noteEl.textContent = '--';
+    noteEl.classList.remove('in-tune');
+    centsEl.textContent = 'Cents: --';
+    freqEl.textContent = 'Frequency: -- (소리 내주세요)';
+    needle.style.transform = 'rotate(-45deg)';
+    rafId = requestAnimationFrame(update);
+    return;
+  }
+
+  let targetNote, targetHz, cents;
+  if (selectedString !== null) {
+    targetNote = tunings[currentInst][selectedString];
+    targetHz = targetNote.hz;
+    cents = 1200 * Math.log2(freq/targetHz);
+    noteEl.textContent = targetNote.note;
+  } else {
+    const near = freqToNearest(freq);
+    targetHz = near.target;
+    cents = near.cents;
+    noteEl.textContent = near.note;
+  }
+
+  freqEl.textContent = `Frequency: ${freq.toFixed(1)} Hz  (목표 ${targetHz.toFixed(2)} Hz)`;
+  centsEl.textContent = `Cents: ${cents > 0 ? '+' : ''}${cents.toFixed(0)}`;
+
+  // 바늘: -50 cents ~ +50 cents 를 -45도 ~ +45도로 매핑
+  const clamped = Math.max(-50, Math.min(50, cents));
+  const angle = (clamped/50) * 45;
+  needle.style.transform = `rotate(${angle}deg)`;
+
+  if (Math.abs(cents) < 5) {
+    noteEl.classList.add('in-tune');
+  } else {
+    noteEl.classList.remove('in-tune');
+  }
+
+  rafId = requestAnimationFrame(update);
+}
+
+// ---- 마이크 시작/중지 ----
+document.getElementById('micBtn').onclick = async () => {
+  const btn = document.getElementById('micBtn');
+  const status = document.getElementById('status');
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+    cancelAnimationFrame(rafId);
+    audioCtx.close(); audioCtx = null;
+    btn.textContent = '🎤 마이크 켜고 튜닝 시작';
+    status.textContent = '마이크가 꺼졌습니다';
+    return;
+  }
+  try {
+    status.textContent = '마이크 권한 요청 중...';
+    stream = await navigator.mediaDevices.getUserMedia({ audio: {
+      echoCancellation: false, noiseSuppression: false, autoGainControl: false
+    }});
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const src = audioCtx.createMediaStreamSource(stream);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    src.connect(analyser);
+    btn.textContent = '⏹ 마이크 중지';
+    status.textContent = '소리를 내면 실시간으로 표시됩니다';
+    update();
+  } catch (e) {
+    status.textContent = '마이크 오류: ' + e.message + ' (HTTPS 또는 localhost에서만 작동)';
+  }
+};
+</script>
+</body>
+</html>
