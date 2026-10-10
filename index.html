@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belcat Apps</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; color: #fff;
+    font-family: -apple-system, "Segoe UI", "Malgun Gothic", sans-serif;
+    font-style: italic; font-weight: 900;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,220,0,0.4), transparent 50%),
+      radial-gradient(circle at 80% 15%, rgba(255,40,40,0.4), transparent 50%),
+      radial-gradient(circle at 30% 85%, rgba(40,80,255,0.4), transparent 55%),
+      linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .wrap { max-width: 480px; width: 100%; text-align: center; }
+  h1 {
+    font-size: 36px; margin-bottom: 8px;
+    background: linear-gradient(90deg, #ffd60a, #ff4757, #4d96ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub { font-size: 13px; color: #ccc; margin-bottom: 30px; }
+  .grid { display: grid; gap: 14px; }
+  a.card {
+    display: block; padding: 24px; border-radius: 14px;
+    background: rgba(255,255,255,0.08); color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+    text-decoration: none; font-size: 18px; font-weight: 900; font-style: italic;
+    transition: transform 0.15s;
+  }
+  a.card:active { transform: scale(0.98); }
+  a.card .desc { display: block; font-size: 12px; opacity: 0.7; margin-top: 6px; font-weight: 400; font-style: normal; }
+  footer { margin-top: 30px; font-size: 11px; color: #888; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>BELCAT</h1>
+  <div class="sub">기타 앰프 &amp; 튜너 웹앱 모음</div>
+  <div class="grid">
+    <a class="card" href="amp/index.html">🎸 Amp Tone Control<span class="desc">BLE 톤 에디터 (볼륨·이퀄라이저·이펙트)</span></a>
+    <a class="card" href="tuner/index.html">🎵 Belcat Tuner<span class="desc">기타·우쿨렐레·베이스·바이올린 튜너</span></a>
+  </div>
+  <footer>© Belcat · test build</footer>
+</div>
+</body>
+</html>
